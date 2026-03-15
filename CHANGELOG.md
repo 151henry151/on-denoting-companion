@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-03-15
+
+### Added
+
+- Add Reading level dropdown (Full article, ELI5, ELI10, ELI20) at the top of the Russell article pane; persist selection in localStorage.
+
+### Changed
+
+- Replace single ELI5 toggle with three simplified versions: ELI5 (plain-language “words can make a promise” / dragon and cookie examples), ELI10 (structured sections with puzzles and George IV), ELI20 (fuller treatment including theory, rival views, three puzzles, acquaintance vs description, and bottom line). Rework all three for target age ranges and clarity.
+
+## [0.3.2] - 2026-03-15
+
+### Added
+
+- Add ELI5 toggle at the top of the Russell article pane; when enabled, replace the full article text with a single-paragraph plain-language explanation and persist the choice in localStorage.
+
 ## [0.3.1] - 2026-03-15
 
 ### Added

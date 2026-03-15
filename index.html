@@ -141,6 +141,44 @@
             font-size: 0.9rem;
             color: var(--muted);
         }
+        .paper-reading {
+            margin-bottom: 1.25rem;
+        }
+        .paper-reading label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+        .paper-reading select {
+            font-size: 1rem;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .eli-reading {
+            display: none;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.75;
+        }
+        .eli-reading.on { display: block; }
+        .eli-reading p {
+            margin: 0 0 1.25rem 0;
+            text-align: justify;
+        }
+        .eli-reading p:last-child { margin-bottom: 0; }
+        .eli-reading .lead { font-size: 1.1rem; }
+        .eli-reading h2 {
+            font-family: 'Libre Baskerville', Georgia, serif;
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.5rem 0;
+            font-weight: 600;
+        }
+        .eli-reading h2:first-child { margin-top: 0; }
+        .paper-full.on { display: none; }
     </style>
 </head>
 <body>
@@ -151,6 +189,63 @@
     <div class="layout">
         <aside class="paper-pane">
             <div class="wrap">
+        <div class="paper-reading">
+            <label for="readingLevel">Reading level</label>
+            <select id="readingLevel" aria-label="Choose reading level: full article or simplified explanation">
+                <option value="full">Full article</option>
+                <option value="eli5">ELI5</option>
+                <option value="eli10">ELI10</option>
+                <option value="eli20">ELI20</option>
+            </select>
+        </div>
+        <div id="eli5Content" class="eli-reading" aria-live="polite">
+            <p><strong>Words can make a promise they can&rsquo;t keep.</strong></p>
+            <p>You know how when someone says &ldquo;the dog,&rdquo; you picture one specific dog? The word &ldquo;the&rdquo; is like a little promise: <em>there&rsquo;s one, and I know which one.</em> &ldquo;A dog&rdquo; is different&mdash;that just means some dog, any dog.</p>
+            <p>Now here&rsquo;s the tricky part. What if someone says &ldquo;the dragon in my backyard is green&rdquo;? You go looking for the dragon. But there isn&rsquo;t one!</p>
+            <p>A clever man named Bertrand Russell said: that&rsquo;s okay, we didn&rsquo;t make up a pretend dragon. When someone says that, they&rsquo;re really making two promises at once&mdash;&ldquo;there is a dragon in my backyard&rdquo; AND &ldquo;it is green.&rdquo; The first promise is broken. There&rsquo;s no dragon. So the whole thing just&hellip; doesn&rsquo;t work out. It&rsquo;s not true.</p>
+            <p>It&rsquo;s like if someone said &ldquo;the cookie on this plate is chocolate chip&rdquo;&mdash;but the plate is empty. You don&rsquo;t need a pretend cookie. The plate is just empty, and what they said is not true.</p>
+            <p>That&rsquo;s Russell&rsquo;s big idea: the word &ldquo;the&rdquo; is secretly making a promise that something exists. When that promise gets broken, what someone said is just not true&mdash;not weird, not magical, just not true.</p>
+            <p>Russell even had a fun puzzle about this. Imagine someone asks: &ldquo;Is the dragon in my backyard green, or is it <em>not</em> green?&rdquo; It has to be one or the other, right? But the dragon isn&rsquo;t on the green list <em>or</em> the not-green list&mdash;it&rsquo;s not anywhere! Some people might say &ldquo;maybe it&rsquo;s invisible.&rdquo; Russell said: nope. There&rsquo;s just no dragon. What they said isn&rsquo;t true. That&rsquo;s all.</p>
+        </div>
+        <div id="eli10Content" class="eli-reading" aria-live="polite">
+            <h2>What&rsquo;s the problem?</h2>
+            <p>We use phrases like &ldquo;the king of France,&rdquo; &ldquo;a man,&rdquo; and &ldquo;all people&rdquo; all the time. But what do they actually mean? Some of these point to something real&mdash;&ldquo;the president of the United States&rdquo; points to a real person. But &ldquo;the king of France&rdquo; doesn&rsquo;t point to anyone, because there&rsquo;s no king of France. Does that mean the sentence &ldquo;the king of France is bald&rdquo; is nonsense? It doesn&rsquo;t feel like nonsense&mdash;it feels like it&rsquo;s just&hellip; false. That gap between &ldquo;nonsense&rdquo; and &ldquo;false&rdquo; is what Russell wanted to fix.</p>
+            <h2>Russell&rsquo;s big idea</h2>
+            <p>Russell said: these phrases don&rsquo;t have meaning all by themselves. Only the <em>whole sentence</em> has a meaning. And that meaning, when you unpack it, is actually three things bundled together:</p>
+            <p>&ldquo;The king of France is bald&rdquo; secretly means:</p>
+            <p>1. There is a king of France (existence)<br>2. There is only <em>one</em> king of France (uniqueness)<br>3. That person is bald (the actual claim)</p>
+            <p>If any of those three things fail&mdash;and the first one fails here, because there&rsquo;s no king of France&mdash;the whole sentence is just false. No imaginary kings required.</p>
+            <h2>How other phrases work</h2>
+            <p>It&rsquo;s not just &ldquo;the.&rdquo; &ldquo;I met a man&rdquo; doesn&rsquo;t mean you met one specific man you could point to&mdash;it means &ldquo;I met <em>someone</em> who is human.&rdquo; &ldquo;All men are mortal&rdquo; doesn&rsquo;t talk about a group of people directly&mdash;it means &ldquo;if you pick <em>any</em> person, they will be mortal.&rdquo; Russell showed that all these fuzzy phrases can be unpacked into careful, precise sentences.</p>
+            <h2>A funny puzzle</h2>
+            <p>Here&rsquo;s one puzzle Russell solved. Either &ldquo;the king of France is bald&rdquo; is true, or &ldquo;the king of France is <em>not</em> bald&rdquo; is true&mdash;there&rsquo;s no third option, right? But if you listed every bald person alive, and every non-bald person alive, you wouldn&rsquo;t find the king of France on either list. He&rsquo;s not there! Some philosophers joked that he must be wearing a wig. Russell&rsquo;s answer was cleaner: &ldquo;the king of France is bald&rdquo; is <em>false</em> (there&rsquo;s no such person), and &ldquo;the king of France is not bald&rdquo; can mean either &ldquo;he exists and has hair&rdquo; (also false) or &ldquo;it is <em>not the case</em> that there is one bald king of France&rdquo; (which is true). No wig needed&mdash;just careful reading.</p>
+            <h2>Another puzzle: George IV</h2>
+            <p>Scott was the author of the famous novel <em>Waverley</em>. So &ldquo;Scott&rdquo; and &ldquo;the author of Waverley&rdquo; seem interchangeable, right? But King George IV wanted to know whether Scott was the author of Waverley. If we swap the names, that becomes: George IV wanted to know whether Scott was <em>Scott.</em> But that&rsquo;s silly&mdash;the king wasn&rsquo;t curious about basic identity! Russell&rsquo;s solution: &ldquo;the author of Waverley&rdquo; isn&rsquo;t just a fancy name for Scott. When you unpack the full sentence, there&rsquo;s no single piece to swap out. The sentence&rsquo;s hidden structure protects us from that confusion.</p>
+            <h2>Why this matters</h2>
+            <p>Before Russell, some philosophers said things like &ldquo;the king of France&rdquo; must stand for <em>some</em> object, even a non-existing one&mdash;an &ldquo;impossible object.&rdquo; Russell thought that was a mess. Others gave non-existing phrases fake stand-ins (like pointing them to an empty set). Russell thought that was artificial. His solution was cleaner: the phrase means nothing on its own. Unpack the whole sentence and the problem disappears.</p>
+        </div>
+        <div id="eli20Content" class="eli-reading" aria-live="polite">
+            <h2>The problem Russell is tackling</h2>
+            <p>Every time we use phrases like &ldquo;a man,&rdquo; &ldquo;all humans,&rdquo; or &ldquo;the king of France,&rdquo; we face a puzzle: what are these phrases actually doing? They seem to point at things&mdash;but sometimes there&rsquo;s nothing to point at. There was no king of France in 1905. So when Russell writes &ldquo;the king of France is bald,&rdquo; is that sentence meaningless? Crazy? Or just false? Getting this right has huge consequences for logic, mathematics, and how we think about knowledge.</p>
+            <p>Russell opens by distinguishing three kinds of denoting phrases: those that denote nothing (&ldquo;the present King of France&rdquo;), those that denote one definite thing (&ldquo;the present King of England&rdquo;), and those that denote ambiguously (&ldquo;a man&rdquo;). His goal is a unified theory that handles all three.</p>
+            <h2>The theory itself</h2>
+            <p>Russell&rsquo;s core claim is radical: <em>denoting phrases have no meaning in isolation.</em> Only the complete sentence in which they appear has a meaning. This means we can&rsquo;t ask &ldquo;what does &lsquo;the king of France&rsquo; refer to?&rdquo; as a standalone question. We can only ask what the full sentence &ldquo;the king of France is bald&rdquo; means.</p>
+            <p>His answer is that such sentences are logical shorthands for longer, more explicit claims. &ldquo;The king of France is bald&rdquo; really asserts three things simultaneously: (1) there exists at least one king of France, (2) there is at most one king of France&mdash;i.e., uniqueness&mdash;and (3) that person is bald. Formally, the word &ldquo;the&rdquo; carries a hidden uniqueness claim that &ldquo;a&rdquo; does not. If any of the three conditions fail&mdash;and here, existence fails&mdash;the whole proposition is simply false, not meaningless.</p>
+            <p>Indefinite descriptions get similar treatment. &ldquo;I met a man&rdquo; becomes &ldquo;there exists an x such that x is human and I met x.&rdquo; &ldquo;All men are mortal&rdquo; becomes &ldquo;for any x, if x is human, then x is mortal.&rdquo; Every denoting phrase dissolves into an explicit logical structure that contains no mysterious referring expression at all.</p>
+            <h2>Why rival theories fail</h2>
+            <p>Russell&rsquo;s theory is sharpened by contrast with two predecessors.</p>
+            <p>Meinong held that every grammatically correct denoting phrase must stand for some object&mdash;including &ldquo;the round square&rdquo; and &ldquo;the present king of France.&rdquo; These objects don&rsquo;t exist in the ordinary sense, but they supposedly have some form of being. Russell&rsquo;s objection is sharp: this leads directly to contradictions. The existent king of France both exists and doesn&rsquo;t exist. The round square is both round and not round. Any theory that requires us to tolerate violations of the law of non-contradiction is not acceptable.</p>
+            <p>Frege offered a more sophisticated picture. He distinguished a phrase&rsquo;s <em>sense</em> (its mode of presentation, how it picks out something) from its <em>denotation</em> (the actual object picked out). This elegantly explains why &ldquo;Scott is the author of Waverley&rdquo; is informative even though both sides refer to the same person&mdash;the senses differ. But Frege runs into trouble when there is no denotation: &ldquo;the king of France is bald&rdquo; ought to be nonsense if the phrase lacks a referent, yet it clearly isn&rsquo;t nonsense&mdash;it feels false. Frege&rsquo;s workaround was to assign a conventional denotation (such as the empty class) to phrases that otherwise refer to nothing. Russell found this artificial and inexact. He also argued that Frege&rsquo;s very distinction between sense and denotation generates its own paradoxes when you try to talk <em>about</em> a phrase&rsquo;s sense&mdash;the sense seems to slip into denotation the moment you mention it.</p>
+            <h2>The three puzzles</h2>
+            <p><strong>Puzzle 1 (George IV and Waverley).</strong> If a = b, we should be able to substitute one for the other in any sentence without changing its truth value. Scott was the author of Waverley, so substituting &ldquo;Scott&rdquo; for &ldquo;the author of Waverley&rdquo; in &ldquo;George IV wished to know whether Scott was the author of Waverley&rdquo; should give &ldquo;George IV wished to know whether Scott was Scott.&rdquo; But this makes the king sound absurdly interested in the law of identity. Russell&rsquo;s solution: once we unpack &ldquo;the author of Waverley&rdquo; into its full logical form, there is no single constituent called &ldquo;the author of Waverley&rdquo; that can be lifted out and replaced. The substitution that seems valid at the grammatical surface doesn&rsquo;t correspond to any valid substitution at the logical level.</p>
+            <p><strong>Puzzle 2 (The king of France, bald or not?).</strong> The law of excluded middle says either &ldquo;P&rdquo; or &ldquo;not-P&rdquo; must be true. So either &ldquo;the king of France is bald&rdquo; or &ldquo;the king of France is not bald.&rdquo; Yet the king appears on neither the bald list nor the not-bald list. Russell&rsquo;s solution introduces the distinction between <em>primary</em> and <em>secondary occurrence</em> of a denoting phrase. &ldquo;The king of France is not bald&rdquo; is ambiguous: it can mean (a) there exists a unique king of France and he is not bald&mdash;false, because no such king exists&mdash;or (b) it is not the case that there exists a unique bald king of France&mdash;true, because no such king exists. Reading (a) gives the phrase primary occurrence; reading (b) gives it secondary (or narrow-scope) occurrence. The apparent paradox dissolves because the two readings are genuinely different propositions. No wigs required.</p>
+            <p><strong>Puzzle 3 (The difference between A and B).</strong> If A differs from B, the difference between them seems to be a real thing. If A doesn&rsquo;t differ from B, there is no such thing. So &ldquo;the difference between A and B&rdquo; sometimes refers to something and sometimes refers to nothing. Russell&rsquo;s theory handles this cleanly: any sentence of the form &ldquo;C (the difference between A and B)&rdquo; is simply false when A and B are identical, because the existence and uniqueness conditions built into &ldquo;the&rdquo; fail. No mysterious entity is needed.</p>
+            <h2>Knowledge by acquaintance and knowledge by description</h2>
+            <p>One of Russell&rsquo;s deeper motivations is epistemological. He distinguishes two ways of knowing things: <em>acquaintance</em>, where we are in direct cognitive contact with an object (as in perception, or our awareness of our own mental states), and <em>knowledge by description</em>, where we know something only via a denoting phrase without ever being directly acquainted with it. We know that the center of mass of the solar system exists and has certain properties, but we have never been acquainted with it&mdash;we reach it purely through description. Russell believed that all genuine thought ultimately bottoms out in acquaintance with particulars, but descriptions allow us to think and talk about a vast range of things we&rsquo;ve never directly encountered&mdash;including other people&rsquo;s minds, which he suspected we are never truly acquainted with at all. The theory of denoting is what makes this possible without positing spooky non-existent objects.</p>
+            <h2>The bottom line</h2>
+            <p>Russell&rsquo;s theory rewrites every sentence containing a denoting phrase into an equivalent sentence that contains no such phrase&mdash;only variables, quantifiers (there exists, for all), and predicates. The denoting phrase dissolves; the sentence does the work. This eliminates the temptation to treat phrases like &ldquo;the king of France&rdquo; as names that need to point at something, real or imaginary. It is, as Frank Ramsey later called it, a paradigm of philosophy: a simple, elegant analysis that makes a whole class of confusions disappear.</p>
+        </div>
+        <div id="paperFull" class="paper-full">
         <h1>On Denoting</h1>
         <p class="meta">Bertrand Russell (1905). <em>Mind</em>, 14(56), 479–493.</p>
 
@@ -208,14 +303,49 @@
             <p>The whole realm of non-entities, such as &lsquo;the round square&rsquo;, &lsquo;the even prime other than 2&rsquo;, &lsquo;Apollo&rsquo;, &lsquo;Hamlet&rsquo;, etc., can now be satisfactorily dealt with. All these are denoting phrases which do not denote anything. A proposition about Apollo means what we get by substituting what the classical dictionary tells us is meant by Apollo, say &lsquo;the sun-god&rsquo;. All propositions in which Apollo occurs are to be interpreted by the above rules for denoting phrases. If &lsquo;Apollo&rsquo; has a primary occurrence, the proposition containing the occurrence is false; if the occurrence is secondary, the proposition may be true. So again &lsquo;the round square is round&rsquo; means &lsquo;there is one and only one entity x which is round and square, and that entity is round&rsquo;, which is a false proposition, not, as Meinong maintains, a true one. &lsquo;The most perfect Being has all perfections; existence is a perfection; therefore the most perfect Being exists&rsquo; becomes: &lsquo;There is one and only one entity x which is most perfect; that one has all perfections; existence is a perfection; therefore that one exists.&rsquo; As a proof, this fails for want of a proof of the premiss &lsquo;there is one and only one entity x which is most perfect&rsquo;.</p>
         </div>
 
-                <footer>
-                    <p><a href="https://hromp.com/">hromp.com</a> · Russell, B. (1905). &ldquo;On Denoting.&rdquo; <em>Mind</em>, 14(56), 479–493.</p>
-                </footer>
+        </div>
+
+        <footer class="paper-footer">
+            <p><a href="https://hromp.com/">hromp.com</a> · Russell, B. (1905). &ldquo;On Denoting.&rdquo; <em>Mind</em>, 14(56), 479–493.</p>
+        </footer>
+
             </div>
         </aside>
         <div class="companion-pane">
             <iframe src="companion.html" title="On Denoting Interactive Companion"></iframe>
         </div>
     </div>
+    <script>
+        (function() {
+            var select = document.getElementById('readingLevel');
+            var paperFull = document.getElementById('paperFull');
+            var eli5 = document.getElementById('eli5Content');
+            var eli10 = document.getElementById('eli10Content');
+            var eli20 = document.getElementById('eli20Content');
+            if (!select || !paperFull || !eli5 || !eli10 || !eli20) return;
+            var key = 'on-denoting-reading-level';
+            var valid = ['full', 'eli5', 'eli10', 'eli20'];
+            function apply(level) {
+                if (valid.indexOf(level) === -1) level = 'full';
+                paperFull.classList.toggle('on', level !== 'full');
+                eli5.classList.toggle('on', level === 'eli5');
+                eli10.classList.toggle('on', level === 'eli10');
+                eli20.classList.toggle('on', level === 'eli20');
+                select.value = level;
+            }
+            try {
+                var saved = localStorage.getItem(key);
+                if (saved && valid.indexOf(saved) !== -1) {
+                    select.value = saved;
+                    apply(saved);
+                }
+            } catch (e) {}
+            select.addEventListener('change', function() {
+                var level = select.value;
+                apply(level);
+                try { localStorage.setItem(key, level); } catch (e) {}
+            });
+        })();
+    </script>
 </body>
 </html>
