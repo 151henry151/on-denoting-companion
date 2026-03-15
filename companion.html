@@ -58,6 +58,8 @@
         }
         .control-row { margin-bottom: 1rem; }
         .control-help { margin-top: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+        .assumption-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.35rem; }
+        .assumption-controls select { width: auto; max-width: none; padding: 0.35rem 0.5rem; }
         .btn {
             display: inline-block; padding: 0.45rem 0.9rem; border-radius: 6px; border: none;
             font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: inherit;
@@ -162,11 +164,43 @@
         <section id="comparator" class="section">
             <p class="section-desc">Compare Russell, Frege, and Meinong on the same proposition.</p>
             <div class="control-row">
-                <label>Proposition</label>
-                <input type="text" id="comparatorProposition" value="The present King of France is bald" placeholder="Type a proposition, e.g. The author of Waverley was a man">
-                <div class="control-help">Valid forms: "The [description] is/was [predicate]" and "The [description] is/was not [predicate]".</div>
+                <label>Denoting phrase form</label>
+                <select id="comparatorPhraseForm">
+                    <option value="a">a [noun]</option>
+                    <option value="some">some [noun]</option>
+                    <option value="every">every [noun]</option>
+                    <option value="all">all [noun]</option>
+                    <option value="no">no [noun]</option>
+                    <option value="the" selected>the [noun]</option>
+                </select>
             </div>
-            <button type="button" class="btn btn-primary" id="comparatorAnalyzeBtn">Analyze proposition</button>
+            <div class="control-row">
+                <label>Noun / description</label>
+                <input type="text" id="comparatorNoun" placeholder="e.g. present King of France" value="present King of France">
+            </div>
+            <div class="control-row">
+                <label>Predicate C</label>
+                <input type="text" id="comparatorPredicate" placeholder="e.g. is bald" value="is bald">
+            </div>
+            <div class="control-row">
+                <label style="display:inline-flex;align-items:center;"><input type="checkbox" id="comparatorNegated"> Negated (is not)</label>
+            </div>
+            <div class="control-row" id="comparatorAssumptionsRow" style="display:none;">
+                <label>Assume (for truth value)</label>
+                <div class="assumption-controls">
+                    <span>Does &ldquo;the <span id="comparatorDescPlaceholder"></span>&rdquo; denote exactly one thing?</span>
+                    <select id="comparatorDenotes">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <span id="comparatorPredicateRow" style="display:none;"> Does that thing satisfy the predicate?</span>
+                    <select id="comparatorPredicateHolds" style="display:none;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" id="comparatorAnalyzeBtn">Analyze</button>
             <div class="error-box" id="comparatorError"></div>
             <div class="theory-panels">
                 <div class="theory-panel russell">
@@ -193,18 +227,42 @@
         <section id="occurrence" class="section">
             <p class="section-desc">Primary vs secondary occurrence of a denoting phrase.</p>
             <div class="control-row">
-                <label>Proposition</label>
-                <input type="text" id="occurrenceProposition" value="The present King of France is not bald" placeholder="Type a proposition to compare primary vs secondary scope">
-                <div class="control-help">Valid forms: "The [description] is/was not [predicate]" and "[Name] wished to know whether the [description] is/was [predicate]".</div>
+                <label>Denoting phrase form</label>
+                <select id="occurrencePhraseForm">
+                    <option value="a">a [noun]</option>
+                    <option value="some">some [noun]</option>
+                    <option value="every">every [noun]</option>
+                    <option value="all">all [noun]</option>
+                    <option value="no">no [noun]</option>
+                    <option value="the" selected>the [noun]</option>
+                </select>
             </div>
-            <button type="button" class="btn btn-primary" id="occurrenceAnalyzeBtn">Analyze proposition</button>
+            <div class="control-row">
+                <label>Noun / description</label>
+                <input type="text" id="occurrenceNoun" placeholder="e.g. present King of France" value="present King of France">
+            </div>
+            <div class="control-row">
+                <label>Predicate C</label>
+                <input type="text" id="occurrencePredicate" placeholder="e.g. is bald" value="is bald">
+            </div>
+            <div class="control-row">
+                <label style="display:inline-flex;align-items:center;"><input type="checkbox" id="occurrenceNegated" checked> Negated (is not)</label>
+            </div>
+            <button type="button" class="btn btn-primary" id="occurrenceAnalyzeBtn">Analyze</button>
             <div class="error-box" id="occurrenceError"></div>
-            <div class="occurrence-panels">
+            <div id="occurrenceSingleReading" style="display:none;">
+                <div class="output-box highlight">
+                    <div class="label">Single reading (no scope ambiguity)</div>
+                    <div id="singleForm" class="content"></div>
+                    <div id="singleParaphrase" class="content" style="margin-top:0.5rem;"></div>
+                    <p class="control-help" style="margin-top:0.5rem;">Primary/secondary distinction applies when the description is under negation (&ldquo;The F is not G&rdquo;) or in an opaque context (&ldquo;X wished to know whether...&rdquo;).</p>
+                </div>
+            </div>
+            <div class="occurrence-panels" id="occurrenceDualPanels">
                 <div class="occurrence-panel">
                     <h3>Primary occurrence</h3>
                     <div class="label">Logical form</div>
                     <div id="primaryForm" class="content"></div>
-                    <div id="primaryTruth" style="margin-top:0.5rem;"></div>
                     <div class="label" style="margin-top:0.5rem;">Paraphrase</div>
                     <div id="primaryParaphrase" class="content"></div>
                 </div>
@@ -212,7 +270,6 @@
                     <h3>Secondary occurrence</h3>
                     <div class="label">Logical form</div>
                     <div id="secondaryForm" class="content"></div>
-                    <div id="secondaryTruth" style="margin-top:0.5rem;"></div>
                     <div class="label" style="margin-top:0.5rem;">Paraphrase</div>
                     <div id="secondaryParaphrase" class="content"></div>
                 </div>

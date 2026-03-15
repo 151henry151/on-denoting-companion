@@ -70,6 +70,16 @@
         };
     }
 
+    function buildDefiniteProposition(noun, predicate, negated) {
+        noun = normalizeSpace(String(noun || '').trim()) || 'thing';
+        predicate = normalizeSpace(String(predicate || '').trim()) || 'C';
+        var predStem = predicate.replace(/^(is|are|was|were)\s+/i, '').trim();
+        if (negated) {
+            return 'The ' + noun + ' is not ' + predStem;
+        }
+        return 'The ' + noun + ' ' + (predicate.match(/^(is|are|was|were)\s/i) ? predicate : 'is ' + predicate);
+    }
+
     function parseWishedSentence(text) {
         var sentence = stripFinalPeriod(normalizeSpace(String(text || '')));
         var match = sentence.match(/^(.+?)\s+wished\s+to\s+know\s+whether\s+the\s+(.+?)\s+(is|are|was|were)\s+(.+)$/i);
@@ -188,17 +198,36 @@
     }
 
     function analyzeComparator() {
-        var input = document.getElementById('comparatorProposition').value;
-        var parsed = parseDefiniteSentence(input);
+        var form = document.getElementById('comparatorPhraseForm').value;
+        var noun = document.getElementById('comparatorNoun').value.trim();
+        var predicate = document.getElementById('comparatorPredicate').value.trim();
+        var negated = document.getElementById('comparatorNegated').checked;
         var errorEl = document.getElementById('comparatorError');
         errorEl.textContent = '';
+        document.getElementById('comparatorAssumptionsRow').style.display = 'none';
 
+        if (form !== 'the') {
+            errorEl.textContent = 'Theory comparison applies to definite descriptions. Select \u201cthe [noun]\u201d above.';
+            ['russell', 'frege', 'meinong'].forEach(function(name) {
+                document.getElementById(name + 'Interp').textContent = '';
+                document.getElementById(name + 'Truth').innerHTML = '';
+                document.getElementById(name + 'Explain').textContent = '';
+            });
+            document.getElementById('comparatorSummary').textContent = '';
+            return;
+        }
+
+        var input = buildDefiniteProposition(noun, predicate, negated);
+        var parsed = parseDefiniteSentence(input);
         if (!parsed) {
-            errorEl.textContent = 'Enter a proposition in the form: The [description] is/was [predicate] (optionally with "not").';
+            errorEl.textContent = 'Could not build proposition from inputs. Use noun and predicate (e.g. \u201cis bald\u201d).';
             return;
         }
 
         var resolution = resolveDescription(parsed.description);
+        if (resolution.type !== 'unknown') {
+            document.getElementById('comparatorAssumptionsRow').style.display = 'none';
+        }
         var russell;
         var frege;
         var meinong;
@@ -247,22 +276,57 @@
             };
             summary = 'With empty descriptions, Russell preserves consistency via quantifier scope, Frege yields a gap, and Meinong invites contradiction.';
         } else {
-            russell = {
-                interp: 'The sentence has definite-description form, but no background fact is loaded for this description.',
-                truth: 'undefined',
-                explain: 'Add world facts (who/what satisfies the description) to complete evaluation.'
-            };
-            frege = {
-                interp: 'Denotation status is not fixed in the current knowledge base.',
-                truth: 'undefined',
-                explain: 'Without denotation facts, no determinate value is produced by this companion.'
-            };
-            meinong = {
-                interp: 'The sentence is grammatically meaningful, but this companion does not assign an object-model here.',
-                truth: 'undefined',
-                explain: 'A fuller ontology would be required to continue the Meinongian comparison.'
-            };
-            summary = 'This proposition is syntactically valid; add supporting facts for the description to get determinate truth comparisons.';
+            var denotesYes = document.getElementById('comparatorDenotes').value === 'yes';
+            var predicateHoldsVal = document.getElementById('comparatorPredicateHolds').value === 'yes';
+            document.getElementById('comparatorAssumptionsRow').style.display = 'block';
+            document.getElementById('comparatorDescPlaceholder').textContent = parsed.description;
+            var predRow = document.getElementById('comparatorPredicateRow');
+            var predSelect = document.getElementById('comparatorPredicateHolds');
+            if (denotesYes) {
+                predRow.style.display = 'inline';
+                predSelect.style.display = 'inline';
+            } else {
+                predRow.style.display = 'none';
+                predSelect.style.display = 'none';
+            }
+            var truthVal = 'undefined';
+            if (!denotesYes) {
+                truthVal = parsed.negated ? 'true' : 'false';
+                russell = {
+                    interp: 'Expansion: there is exactly one ' + parsed.description + ' and it ' + (parsed.negated ? 'is not ' : 'is ') + parsed.predicate + '.',
+                    truth: truthVal,
+                    explain: 'Assuming the description fails to denote: Russell\'s expansion makes the positive claim false; the negation (secondary reading) true.'
+                };
+                frege = {
+                    interp: 'The phrase has sense but no denotation in your scenario.',
+                    truth: 'undefined',
+                    explain: 'Frege typically assigns a truth-value gap or a convention for empty denotation.'
+                };
+                meinong = {
+                    interp: 'The phrase is treated as denoting a non-subsistent object.',
+                    truth: 'contradiction',
+                    explain: 'Meinongian objects that do not exist can lead to contradictory assignments.'
+                };
+                summary = 'With your assumption that "the ' + parsed.description + '" does not denote, Russell yields a determinate result; Frege and Meinong behave as above.';
+            } else {
+                truthVal = parsed.negated ? (!predicateHoldsVal ? 'true' : 'false') : (predicateHoldsVal ? 'true' : 'false');
+                russell = {
+                    interp: 'Expansion: there is exactly one ' + parsed.description + ', and it ' + (parsed.negated ? 'is not ' : 'is ') + parsed.predicate + '.',
+                    truth: truthVal,
+                    explain: 'Assuming exactly one denotation and that the predicate ' + (predicateHoldsVal ? 'holds' : 'does not hold') + ', Russell\'s expansion gives this truth value.'
+                };
+                frege = {
+                    interp: 'The phrase denotes one object; proposition evaluated of that object.',
+                    truth: truthVal,
+                    explain: 'With denotation fixed, Frege and Russell agree on truth value.'
+                };
+                meinong = {
+                    interp: 'The phrase denotes an object; the proposition is about that object.',
+                    truth: truthVal,
+                    explain: 'When reference succeeds, the three views converge.'
+                };
+                summary = 'With your assumptions, all three theories yield a determinate truth value.';
+            }
         }
 
         ['russell', 'frege', 'meinong'].forEach(function(name) {
@@ -275,34 +339,48 @@
     }
 
     function analyzeOccurrence() {
-        var input = document.getElementById('occurrenceProposition').value;
+        var form = document.getElementById('occurrencePhraseForm').value;
+        var noun = document.getElementById('occurrenceNoun').value.trim();
+        var predicate = document.getElementById('occurrencePredicate').value.trim();
+        var negated = document.getElementById('occurrenceNegated').checked;
         var errorEl = document.getElementById('occurrenceError');
         errorEl.textContent = '';
+        document.getElementById('occurrenceSingleReading').style.display = 'none';
+        document.getElementById('occurrenceDualPanels').style.display = 'grid';
 
+        if (form !== 'the') {
+            errorEl.textContent = 'Primary vs secondary applies to definite descriptions. Select \u201cthe [noun]\u201d above.';
+            return;
+        }
+
+        var input = buildDefiniteProposition(noun, predicate, negated);
         var parsedNegation = parseDefiniteSentence(input);
-        var parsedWished = parseWishedSentence(input);
+        var parsedWished = null;
+
+        if (parsedNegation && !parsedNegation.negated) {
+            var singleLatex = '\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land P(x))';
+            var singleEl = document.getElementById('singleForm');
+            singleEl.removeAttribute('data-latex');
+            singleEl.setAttribute('data-latex', singleLatex);
+            if (window.katex) {
+                window.katex.render(singleLatex, singleEl, { throwOnError: false });
+            } else {
+                singleEl.textContent = singleLatex;
+            }
+            document.getElementById('singleParaphrase').textContent = 'There is exactly one ' + parsedNegation.description + ', and it is ' + parsedNegation.predicate + '.';
+            document.getElementById('occurrenceSingleReading').style.display = 'block';
+            document.getElementById('occurrenceDualPanels').style.display = 'none';
+            return;
+        }
 
         if (parsedNegation && parsedNegation.negated) {
             var resolution = resolveDescription(parsedNegation.description);
-            var primaryTruth = 'undefined';
-            var secondaryTruth = 'undefined';
-
-            if (resolution.type === 'none') {
-                primaryTruth = 'false';
-                secondaryTruth = 'true';
-            } else if (resolution.type === 'one') {
-                var holds = predicateHolds(resolution.entity, parsedNegation.predicate);
-                primaryTruth = holds ? 'false' : 'true';
-                secondaryTruth = holds ? 'false' : 'true';
-            }
 
             var primaryLatex = '\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land \\neg P(x))';
             var secondaryLatex = '\\neg\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land P(x))';
 
             renderMath('primaryForm', primaryLatex);
             renderMath('secondaryForm', secondaryLatex);
-            setBadge('primaryTruth', primaryTruth);
-            setBadge('secondaryTruth', secondaryTruth);
             document.getElementById('primaryParaphrase').textContent = 'There is exactly one ' + parsedNegation.description + ', and it is not ' + parsedNegation.predicate + '.';
             document.getElementById('secondaryParaphrase').textContent = 'It is not the case that there is exactly one ' + parsedNegation.description + ' that is ' + parsedNegation.predicate + '.';
             document.getElementById('occurrenceSummary').textContent = 'For negated definite descriptions, primary and secondary scope can diverge when the description fails to denote.';
@@ -321,8 +399,6 @@
             renderMath('primaryForm', primaryLatexWished);
             renderMath('secondaryForm', secondaryLatexWished);
 
-            setBadge('primaryTruth', knownGeorgeCase ? 'true' : 'undefined');
-            setBadge('secondaryTruth', knownGeorgeCase ? 'undefined' : 'undefined');
             document.getElementById('primaryParaphrase').textContent = parsedWished.asker + ' wished to know, concerning the uniquely described individual, whether that individual was ' + parsedWished.predicate + '.';
             document.getElementById('secondaryParaphrase').textContent = parsedWished.asker + ' wished to know whether the entire definite-description proposition was true.';
             document.getElementById('occurrenceSummary').textContent = knownGeorgeCase
@@ -331,7 +407,9 @@
             return;
         }
 
-        errorEl.textContent = 'Enter either: "The [description] is/was not [predicate]" or "[Name] wished to know whether the [description] is/was [predicate]".';
+        if (!parsedNegation) {
+            errorEl.textContent = 'Could not build proposition from inputs. Use noun and predicate (e.g. \u201cis bald\u201d).';
+        }
     }
 
     initTabs();
@@ -351,14 +429,18 @@
     document.getElementById('stepByStep').addEventListener('change', runExpansion);
 
     document.getElementById('comparatorAnalyzeBtn').addEventListener('click', analyzeComparator);
-    document.getElementById('comparatorProposition').addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') analyzeComparator();
-    });
+    document.getElementById('comparatorPhraseForm').addEventListener('change', analyzeComparator);
+    document.getElementById('comparatorNoun').addEventListener('input', analyzeComparator);
+    document.getElementById('comparatorPredicate').addEventListener('input', analyzeComparator);
+    document.getElementById('comparatorNegated').addEventListener('change', analyzeComparator);
+    document.getElementById('comparatorDenotes').addEventListener('change', analyzeComparator);
+    document.getElementById('comparatorPredicateHolds').addEventListener('change', analyzeComparator);
 
     document.getElementById('occurrenceAnalyzeBtn').addEventListener('click', analyzeOccurrence);
-    document.getElementById('occurrenceProposition').addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') analyzeOccurrence();
-    });
+    document.getElementById('occurrencePhraseForm').addEventListener('change', analyzeOccurrence);
+    document.getElementById('occurrenceNoun').addEventListener('input', analyzeOccurrence);
+    document.getElementById('occurrencePredicate').addEventListener('input', analyzeOccurrence);
+    document.getElementById('occurrenceNegated').addEventListener('change', analyzeOccurrence);
 
     runExpansion();
     analyzeComparator();

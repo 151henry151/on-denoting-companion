@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-15
+
+### Added
+
+- Add assumption controls (denotes? / predicate holds?) in Theory Comparator when description is not in the built-in list.
+- Add single-reading view in Primary vs Secondary for positive “The F is G” propositions.
+
+### Changed
+
+- Use phrase form, noun/description, and predicate C inputs (same style as Expansion Engine) in Theory Comparator and Primary vs Secondary instead of free-text proposition.
+- Add “Negated (is not)” checkbox in both comparator and occurrence sections.
+- Restrict Theory Comparator and Primary vs Secondary to definite descriptions (“the [noun]”); show guidance when another form is selected.
+
+### Removed
+
+- Remove TRUE/FALSE/UNDEFINED badges from Primary vs Secondary occurrence panels.
+
 ## [0.2.0] - 2026-03-15
 
 ### Added
