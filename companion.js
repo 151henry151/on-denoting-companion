@@ -1,13 +1,113 @@
 (function() {
-    document.querySelectorAll('.tabs button').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var t = this.getAttribute('data-tab');
-            document.querySelectorAll('.tabs button').forEach(function(b) { b.classList.remove('active'); });
-            this.classList.add('active');
-            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
-            document.getElementById(t).classList.add('active');
+    var descriptionFacts = {
+        'present king of france': { type: 'none' },
+        'author of waverley': { type: 'one', entity: 'scott' },
+        'father of charles ii': { type: 'one', entity: 'charles i' }
+    };
+
+    var entityFacts = {
+        scott: ['man', 'a man', 'human', 'male'],
+        'charles i': ['executed', 'a man', 'man']
+    };
+
+    function normalizeSpace(text) {
+        return text.replace(/\s+/g, ' ').trim();
+    }
+
+    function stripFinalPeriod(text) {
+        return text.replace(/[.]+$/g, '').trim();
+    }
+
+    function normalizeKey(text) {
+        return normalizeSpace(stripFinalPeriod(String(text || '').toLowerCase())).replace(/[^a-z0-9\s]/g, '');
+    }
+
+    function normalizePredicate(text) {
+        return normalizeKey(text).replace(/^(a|an|the)\s+/, '');
+    }
+
+    function cap(s) {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function renderMath(elementId, latexExpression) {
+        var el = document.getElementById(elementId);
+        el.setAttribute('data-latex', latexExpression);
+        if (window.katex) {
+            window.katex.render(latexExpression, el, { throwOnError: false });
+        } else {
+            el.textContent = latexExpression;
+        }
+    }
+
+    function rerenderAllMath() {
+        if (!window.katex) return;
+        document.querySelectorAll('[data-latex]').forEach(function(el) {
+            var latexExpression = el.getAttribute('data-latex') || '';
+            window.katex.render(latexExpression, el, { throwOnError: false });
         });
-    });
+    }
+
+    function setBadge(id, truth) {
+        var cls;
+        if (truth === 'true') cls = 'true';
+        else if (truth === 'false') cls = 'false';
+        else if (truth === 'contradiction') cls = 'contradiction';
+        else cls = 'undefined';
+        document.getElementById(id).innerHTML = '<span class="badge ' + cls + '">' + truth.toUpperCase() + '</span>';
+    }
+
+    function parseDefiniteSentence(text) {
+        var sentence = stripFinalPeriod(normalizeSpace(String(text || '')));
+        var match = sentence.match(/^the\s+(.+?)\s+(is|are|was|were)\s+(not\s+)?(.+)$/i);
+        if (!match) return null;
+        return {
+            raw: sentence,
+            description: normalizeSpace(match[1]),
+            copula: match[2].toLowerCase(),
+            negated: !!match[3],
+            predicate: normalizeSpace(match[4])
+        };
+    }
+
+    function parseWishedSentence(text) {
+        var sentence = stripFinalPeriod(normalizeSpace(String(text || '')));
+        var match = sentence.match(/^(.+?)\s+wished\s+to\s+know\s+whether\s+the\s+(.+?)\s+(is|are|was|were)\s+(.+)$/i);
+        if (!match) return null;
+        return {
+            raw: sentence,
+            asker: normalizeSpace(match[1]),
+            description: normalizeSpace(match[2]),
+            copula: match[3].toLowerCase(),
+            predicate: normalizeSpace(match[4])
+        };
+    }
+
+    function resolveDescription(description) {
+        var key = normalizeKey(description);
+        return descriptionFacts[key] || { type: 'unknown' };
+    }
+
+    function predicateHolds(entity, predicate) {
+        var factList = entityFacts[entity] || [];
+        var normalized = normalizePredicate(predicate);
+        return factList.some(function(item) {
+            return normalizePredicate(item) === normalized;
+        });
+    }
+
+    function initTabs() {
+        document.querySelectorAll('.tabs button').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var t = this.getAttribute('data-tab');
+                document.querySelectorAll('.tabs button').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+                document.getElementById(t).classList.add('active');
+                rerenderAllMath();
+            });
+        });
+    }
 
     var examples = [
         { form: 'the', noun: 'present King of France', pred: 'is bald' },
@@ -18,61 +118,51 @@
         { form: 'a', noun: 'dragon', pred: 'breathes fire' }
     ];
     var exampleIndex = 0;
-    document.getElementById('exampleBtn').addEventListener('click', function() {
-        var ex = examples[exampleIndex % examples.length];
-        document.getElementById('phraseForm').value = ex.form;
-        document.getElementById('nounInput').value = ex.noun;
-        document.getElementById('predicateInput').value = ex.pred;
-        exampleIndex++;
-        runExpansion();
-    });
 
-    function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function Fx(noun) { return 'x is ' + noun.replace(/^the\s+/, ''); }
     function Cx(pred) {
-        var p = pred.trim();
-        if (/^(is|are|was|were)\s/.test(p)) return 'x ' + p;
-        return 'x ' + p;
+        return 'x ' + pred.trim();
     }
 
     function runExpansion() {
         var form = document.getElementById('phraseForm').value;
         var noun = document.getElementById('nounInput').value.trim() || 'thing';
-        var pred = document.getElementById('predicateInput').value.trim() || 'C';
+        var pred = document.getElementById('predicateInput').value.trim() || 'has property C';
         var stepByStep = document.getElementById('stepByStep').checked;
+        var cleanedNoun = noun.replace(/^the\s+/i, '');
 
-        var natural = '', russell = '', symbolic = '';
-        var F = noun.replace(/^the\s+/, '');
+        var natural = '';
+        var russell = '';
+        var symbolicLatex = '';
 
         if (form === 'a' || form === 'some') {
             natural = cap(form === 'a' ? 'A ' + noun : 'Some ' + noun) + ' ' + pred + '.';
-            russell = '"' + Cx(pred) + ' and x is ' + F + '" is not always false.';
-            symbolic = '\u2203x (F(x) \u2227 C(x))';
+            russell = '"' + Cx(pred) + ' and x is ' + cleanedNoun + '" is not always false.';
+            symbolicLatex = '\\exists x\\,(F(x) \\land C(x))';
         } else if (form === 'all' || form === 'every') {
             natural = 'All ' + noun + ' ' + pred + '.';
-            russell = '"If x is ' + F + ', then ' + Cx(pred) + '" is always true.';
-            symbolic = '\u2200x (F(x) \u2192 C(x))';
+            russell = '"If x is ' + cleanedNoun + ', then ' + Cx(pred) + '" is always true.';
+            symbolicLatex = '\\forall x\\,(F(x) \\to C(x))';
         } else if (form === 'no') {
             natural = 'No ' + noun + ' ' + pred + '.';
-            russell = '"If x is ' + F + ', then ' + Cx(pred) + ' is false" is always true.';
-            symbolic = '\u2200x (F(x) \u2192 \u00ACC(x))';
-        } else if (form === 'the') {
-            natural = 'The ' + noun + ' ' + pred + '.';
-            russell = 'Existence: There is at least one x such that x is ' + F + '. ';
-            russell += 'Uniqueness: For any y, if y is ' + F + ', then y = x. ';
+            russell = '"If x is ' + cleanedNoun + ', then ' + Cx(pred) + ' is false" is always true.';
+            symbolicLatex = '\\forall x\\,(F(x) \\to \\neg C(x))';
+        } else {
+            natural = 'The ' + cleanedNoun + ' ' + pred + '.';
+            russell = 'Existence: There is at least one x such that x is ' + cleanedNoun + '. ';
+            russell += 'Uniqueness: For any y, if y is ' + cleanedNoun + ', then y = x. ';
             russell += 'Predication: That x ' + pred + '.';
-            symbolic = '\u2203x (F(x) \u2227 \u2200y(F(y) \u2192 y = x) \u2227 C(x))';
+            symbolicLatex = '\\exists x\\,(F(x) \\land \\forall y\\,(F(y) \\to y=x) \\land C(x))';
         }
 
         document.getElementById('naturalOutput').textContent = natural;
-        document.getElementById('symbolicOutput').textContent = symbolic;
+        renderMath('symbolicOutput', symbolicLatex);
 
         var stepContainer = document.getElementById('stepByStepContainer');
         stepContainer.innerHTML = '';
         if (stepByStep && form === 'the') {
             var steps = [
-                { text: 'There is at least one x such that x is ' + F + '.', ann: 'Step 1: Assert existence' },
-                { text: 'For any y, if y is ' + F + ', then y is identical with x.', ann: 'Step 2: Assert uniqueness' },
+                { text: 'There is at least one x such that x is ' + cleanedNoun + '.', ann: 'Step 1: Assert existence' },
+                { text: 'For any y, if y is ' + cleanedNoun + ', then y is identical with x.', ann: 'Step 2: Assert uniqueness' },
                 { text: 'That x ' + pred + '.', ann: 'Step 3: Apply predicate' }
             ];
             steps.forEach(function(s) {
@@ -97,140 +187,192 @@
         }
     }
 
+    function analyzeComparator() {
+        var input = document.getElementById('comparatorProposition').value;
+        var parsed = parseDefiniteSentence(input);
+        var errorEl = document.getElementById('comparatorError');
+        errorEl.textContent = '';
+
+        if (!parsed) {
+            errorEl.textContent = 'Enter a proposition in the form: The [description] is/was [predicate] (optionally with "not").';
+            return;
+        }
+
+        var resolution = resolveDescription(parsed.description);
+        var russell;
+        var frege;
+        var meinong;
+        var summary;
+
+        if (resolution.type === 'one') {
+            var trueForEntity = predicateHolds(resolution.entity, parsed.predicate);
+            var sentenceTruth = parsed.negated ? !trueForEntity : trueForEntity;
+            var truthText = sentenceTruth ? 'true' : 'false';
+
+            russell = {
+                interp: 'Description resolves to one individual (' + cap(resolution.entity) + ').',
+                truth: truthText,
+                explain: 'Existence and uniqueness are satisfied, so truth depends on whether the predicate applies to that individual.'
+            };
+            frege = {
+                interp: 'The phrase denotes one object, and the proposition is evaluated of that denotation.',
+                truth: truthText,
+                explain: 'When denotation succeeds, Frege and Russell agree on truth-value.'
+            };
+            meinong = {
+                interp: 'The phrase denotes an object in a straightforward way.',
+                truth: truthText,
+                explain: 'When reference succeeds, the three views converge in this companion.'
+            };
+            summary = 'Reference succeeds, so the three comparisons align on the evaluated truth-value.';
+        } else if (resolution.type === 'none') {
+            russell = parsed.negated ? {
+                interp: 'Secondary reading: negate the whole definite-description claim.',
+                truth: 'true',
+                explain: 'There is no unique satisfier, so "not (there exists exactly one such x that is P)" is true.'
+            } : {
+                interp: 'No constituent object corresponds to the phrase after expansion.',
+                truth: 'false',
+                explain: 'The existence-and-uniqueness condition fails, so the proposition is false.'
+            };
+            frege = {
+                interp: 'The phrase has sense but lacks denotation.',
+                truth: 'undefined',
+                explain: 'In Fregean treatments, empty denotation introduces a truth-value gap unless a convention is imposed.'
+            };
+            meinong = {
+                interp: 'The phrase is treated as denoting a non-subsistent object.',
+                truth: 'contradiction',
+                explain: 'That move risks assigning incompatible properties to objects that do not subsist.'
+            };
+            summary = 'With empty descriptions, Russell preserves consistency via quantifier scope, Frege yields a gap, and Meinong invites contradiction.';
+        } else {
+            russell = {
+                interp: 'The sentence has definite-description form, but no background fact is loaded for this description.',
+                truth: 'undefined',
+                explain: 'Add world facts (who/what satisfies the description) to complete evaluation.'
+            };
+            frege = {
+                interp: 'Denotation status is not fixed in the current knowledge base.',
+                truth: 'undefined',
+                explain: 'Without denotation facts, no determinate value is produced by this companion.'
+            };
+            meinong = {
+                interp: 'The sentence is grammatically meaningful, but this companion does not assign an object-model here.',
+                truth: 'undefined',
+                explain: 'A fuller ontology would be required to continue the Meinongian comparison.'
+            };
+            summary = 'This proposition is syntactically valid; add supporting facts for the description to get determinate truth comparisons.';
+        }
+
+        ['russell', 'frege', 'meinong'].forEach(function(name) {
+            var data = name === 'russell' ? russell : name === 'frege' ? frege : meinong;
+            document.getElementById(name + 'Interp').textContent = data.interp;
+            setBadge(name + 'Truth', data.truth);
+            document.getElementById(name + 'Explain').textContent = data.explain;
+        });
+        document.getElementById('comparatorSummary').textContent = summary;
+    }
+
+    function analyzeOccurrence() {
+        var input = document.getElementById('occurrenceProposition').value;
+        var errorEl = document.getElementById('occurrenceError');
+        errorEl.textContent = '';
+
+        var parsedNegation = parseDefiniteSentence(input);
+        var parsedWished = parseWishedSentence(input);
+
+        if (parsedNegation && parsedNegation.negated) {
+            var resolution = resolveDescription(parsedNegation.description);
+            var primaryTruth = 'undefined';
+            var secondaryTruth = 'undefined';
+
+            if (resolution.type === 'none') {
+                primaryTruth = 'false';
+                secondaryTruth = 'true';
+            } else if (resolution.type === 'one') {
+                var holds = predicateHolds(resolution.entity, parsedNegation.predicate);
+                primaryTruth = holds ? 'false' : 'true';
+                secondaryTruth = holds ? 'false' : 'true';
+            }
+
+            var primaryLatex = '\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land \\neg P(x))';
+            var secondaryLatex = '\\neg\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land P(x))';
+
+            renderMath('primaryForm', primaryLatex);
+            renderMath('secondaryForm', secondaryLatex);
+            setBadge('primaryTruth', primaryTruth);
+            setBadge('secondaryTruth', secondaryTruth);
+            document.getElementById('primaryParaphrase').textContent = 'There is exactly one ' + parsedNegation.description + ', and it is not ' + parsedNegation.predicate + '.';
+            document.getElementById('secondaryParaphrase').textContent = 'It is not the case that there is exactly one ' + parsedNegation.description + ' that is ' + parsedNegation.predicate + '.';
+            document.getElementById('occurrenceSummary').textContent = 'For negated definite descriptions, primary and secondary scope can diverge when the description fails to denote.';
+            return;
+        }
+
+        if (parsedWished) {
+            var askerKey = normalizeKey(parsedWished.asker);
+            var descriptionKey = normalizeKey(parsedWished.description);
+            var predicateKey = normalizePredicate(parsedWished.predicate);
+            var knownGeorgeCase = askerKey === 'george iv' && descriptionKey === 'author of waverley' && predicateKey === 'scott';
+
+            var primaryLatexWished = '\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land W_{' + askerKey.replace(/\s+/g, '') + '}(x=P))';
+            var secondaryLatexWished = 'W_{' + askerKey.replace(/\s+/g, '') + '}\\!\\left(\\exists x\\,(D(x) \\land \\forall y\\,(D(y) \\to y=x) \\land x=P)\\right)';
+
+            renderMath('primaryForm', primaryLatexWished);
+            renderMath('secondaryForm', secondaryLatexWished);
+
+            setBadge('primaryTruth', knownGeorgeCase ? 'true' : 'undefined');
+            setBadge('secondaryTruth', knownGeorgeCase ? 'undefined' : 'undefined');
+            document.getElementById('primaryParaphrase').textContent = parsedWished.asker + ' wished to know, concerning the uniquely described individual, whether that individual was ' + parsedWished.predicate + '.';
+            document.getElementById('secondaryParaphrase').textContent = parsedWished.asker + ' wished to know whether the entire definite-description proposition was true.';
+            document.getElementById('occurrenceSummary').textContent = knownGeorgeCase
+                ? 'This matches Russell\'s George IV example: the primary reading can be true while the secondary reading depends on what proposition was being considered.'
+                : 'For attitude reports ("wished to know whether..."), primary and secondary scope differ by where the denoting phrase is eliminated.';
+            return;
+        }
+
+        errorEl.textContent = 'Enter either: "The [description] is/was not [predicate]" or "[Name] wished to know whether the [description] is/was [predicate]".';
+    }
+
+    initTabs();
+
+    document.getElementById('exampleBtn').addEventListener('click', function() {
+        var ex = examples[exampleIndex % examples.length];
+        document.getElementById('phraseForm').value = ex.form;
+        document.getElementById('nounInput').value = ex.noun;
+        document.getElementById('predicateInput').value = ex.pred;
+        exampleIndex++;
+        runExpansion();
+    });
+
     document.getElementById('phraseForm').addEventListener('change', runExpansion);
     document.getElementById('nounInput').addEventListener('input', runExpansion);
     document.getElementById('predicateInput').addEventListener('input', runExpansion);
     document.getElementById('stepByStep').addEventListener('change', runExpansion);
+
+    document.getElementById('comparatorAnalyzeBtn').addEventListener('click', analyzeComparator);
+    document.getElementById('comparatorProposition').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') analyzeComparator();
+    });
+
+    document.getElementById('occurrenceAnalyzeBtn').addEventListener('click', analyzeOccurrence);
+    document.getElementById('occurrenceProposition').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') analyzeOccurrence();
+    });
+
     runExpansion();
+    analyzeComparator();
+    analyzeOccurrence();
 
-    var comparatorData = {
-        'king-bald': {
-            russell: { interp: 'No constituent "the present King of France"; expansion yields false.', truth: 'false', explain: 'There is no unique present King of France, so the proposition is false.' },
-            frege: { interp: 'Phrase has meaning but no denotation; conventional denotation (e.g. null).', truth: 'false', explain: 'By convention, such statements are false or truth-valueless.' },
-            meinong: { interp: 'The phrase denotes a non-subsistent object that is bald.', truth: 'contradiction', explain: 'The object both exists (as object of thought) and does not exist.' }
-        },
-        'king-not-bald': {
-            russell: { interp: 'Secondary reading: it is not the case that there is a unique King who is bald.', truth: 'true', explain: 'Under secondary occurrence the denial is true.' },
-            frege: { interp: 'Convention for negations of empty reference.', truth: 'undefined', explain: 'Frege must stipulate how negation interacts with empty reference.' },
-            meinong: { interp: 'The non-subsistent King has the property of not being bald.', truth: 'contradiction', explain: 'Same contradiction as above.' }
-        },
-        'waverley': {
-            russell: { interp: 'Exactly one entity wrote Waverley, and that one was a man.', truth: 'true', explain: 'Scott satisfies the description.' },
-            frege: { interp: 'The denotation (Scott) is a man.', truth: 'true', explain: 'Proposition is true of the denoted individual.' },
-            meinong: { interp: 'The denoted object is a man.', truth: 'true', explain: 'When reference succeeds, theories converge.' }
-        },
-        'charles': {
-            russell: { interp: 'Exactly one x was father of Charles II and was executed.', truth: 'true', explain: 'Charles I satisfies the description.' },
-            frege: { interp: 'The denotation (Charles I) was executed.', truth: 'true', explain: 'True of the denoted individual.' },
-            meinong: { interp: 'The denoted individual was executed.', truth: 'true', explain: 'Convergence when reference succeeds.' }
+    var katexRetry = 0;
+    (function retryMathRender() {
+        if (window.katex) {
+            rerenderAllMath();
+            return;
         }
-    };
-
-    function updateComparator() {
-        var key = document.getElementById('comparatorProposition').value;
-        var d = comparatorData[key];
-        ['russell', 'frege', 'meinong'].forEach(function(name) {
-            var c = d[name];
-            document.getElementById(name + 'Interp').textContent = c.interp;
-            var cls = c.truth === 'true' ? 'true' : c.truth === 'false' ? 'false' : c.truth === 'contradiction' ? 'contradiction' : 'undefined';
-            document.getElementById(name + 'Truth').innerHTML = '<span class="badge ' + cls + '">' + c.truth.toUpperCase() + '</span>';
-            document.getElementById(name + 'Explain').textContent = c.explain;
-        });
-        document.getElementById('comparatorSummary').textContent = 'With non-referring "the" phrases, Meinong produces contradiction. Frege avoids it by convention but artificially. Russell yields a clean false (or true for the denial under secondary occurrence) without non-subsistent objects.';
-    }
-    document.getElementById('comparatorProposition').addEventListener('change', updateComparator);
-    updateComparator();
-
-    var occurrenceData = {
-        'king-not-bald': {
-            primary: { form: '\u2203x (K(x) \u2227 \u2200y(K(y)\u2192y=x) \u2227 \u00ACB(x))', truth: 'FALSE', paraphrase: 'There is an entity which is now King of France and is not bald.' },
-            secondary: { form: '\u00AC(\u2203x (K(x) \u2227 \u2200y(K(y)\u2192y=x) \u2227 B(x)))', truth: 'TRUE', paraphrase: 'It is not the case that there is a unique King of France who is bald.' }
-        },
-        'george-waverley': {
-            primary: { form: 'One author of Waverley, and George IV wished to know whether he was Scott.', truth: 'TRUE', paraphrase: 'George IV wished to know, concerning the man who wrote Waverley, whether he was Scott.' },
-            secondary: { form: 'George IV wished to know whether (exactly one man wrote Waverley and Scott was that man).', truth: 'TRUE/FALSE', paraphrase: 'George IV wondered whether Scott was the author (opaque reading).' }
+        if (katexRetry < 20) {
+            katexRetry++;
+            setTimeout(retryMathRender, 150);
         }
-    };
-
-    function updateOccurrence() {
-        var key = document.getElementById('occurrenceProposition').value;
-        var d = occurrenceData[key];
-        document.getElementById('primaryForm').textContent = d.primary.form;
-        document.getElementById('primaryTruth').innerHTML = '<span class="badge ' + (d.primary.truth === 'TRUE' ? 'true' : 'false') + '">' + d.primary.truth + '</span>';
-        document.getElementById('primaryParaphrase').textContent = d.primary.paraphrase;
-        document.getElementById('secondaryForm').textContent = d.secondary.form;
-        document.getElementById('secondaryTruth').innerHTML = '<span class="badge ' + (d.secondary.truth.indexOf('TRUE') !== -1 ? 'true' : 'false') + '">' + d.secondary.truth + '</span>';
-        document.getElementById('secondaryParaphrase').textContent = d.secondary.paraphrase;
-        document.getElementById('occurrenceSummary').textContent = 'This distinction lets Russell avoid the conclusion that the King of France wears a wig: the denial can be true (secondary occurrence). Primary reading is false (there is no such King).';
-    }
-    document.getElementById('occurrenceProposition').addEventListener('change', updateOccurrence);
-    updateOccurrence();
-
-    document.getElementById('p1Substitute').addEventListener('click', function() {
-        document.getElementById('p1Result').innerHTML = 'After substitution: <em>George IV wished to know whether Scott was Scott.</em> That is absurd.';
-        document.getElementById('p1Solution').textContent = "Russell's solution: The proposition does not contain a constituent 'the author of Waverley' for which we can substitute 'Scott'. The phrase is eliminated in the full expansion.";
-    });
-
-    document.getElementById('p2Joke').textContent = 'Hegelians, who love a synthesis, will probably conclude that he wears a wig.';
-    document.getElementById('p2Solution').textContent = "Russell's solution: Under secondary occurrence, 'the present King of France is not bald' means 'It is false that there is a unique King of France who is bald' - which is true.";
-
-    function p3Update() {
-        var a = document.getElementById('p3A').value.trim() || 'A';
-        var b = document.getElementById('p3B').value.trim() || 'B';
-        var same = a === b;
-        document.getElementById('p3Denotation').textContent = same ? 'denotes nothing (A = B).' : 'denotes the difference between ' + a + ' and ' + b + '.';
-        document.getElementById('p3Solution').textContent = same
-            ? "When A = B, 'the difference between A and B' does not denote; the proposition is false for any predicate. No non-entity as subject."
-            : "When A and B differ, there is exactly one entity that is the difference.";
-    }
-    document.getElementById('p3A').addEventListener('input', p3Update);
-    document.getElementById('p3B').addEventListener('input', p3Update);
-    p3Update();
-
-    var acquaintanceItems = ['Objects of perception', 'Abstract logical objects', 'Sense-data'];
-    var descriptionItems = ['The centre of mass of the Solar System', "Other people's minds", 'Physical matter', 'The present King of France'];
-
-    function renderAcquaintance() {
-        var aList = document.getElementById('acquaintanceList');
-        var dList = document.getElementById('descriptionList');
-        aList.innerHTML = acquaintanceItems.map(function(item) {
-            return '<div class="acquaintance-item" draggable="true" data-item="' + item.replace(/"/g, '&quot;') + '">' + item + '</div>';
-        }).join('');
-        dList.innerHTML = descriptionItems.map(function(item) {
-            return '<div class="acquaintance-item" draggable="true" data-item="' + item.replace(/"/g, '&quot;') + '">' + item + '</div>';
-        }).join('');
-        aList.querySelectorAll('.acquaintance-item').forEach(function(el) {
-            el.addEventListener('dragstart', function(e) {
-                e.dataTransfer.setData('text', e.target.getAttribute('data-item'));
-                e.target.classList.add('dragging');
-            });
-        });
-        dList.querySelectorAll('.acquaintance-item').forEach(function(el) {
-            el.addEventListener('dragstart', function(e) {
-                e.dataTransfer.setData('text', e.target.getAttribute('data-item'));
-                e.target.classList.add('dragging');
-            });
-        });
-        [aList, dList].forEach(function(container) {
-            container.addEventListener('dragover', function(e) { e.preventDefault(); });
-            container.addEventListener('drop', function(e) {
-                e.preventDefault();
-                var item = e.dataTransfer.getData('text');
-                if (!item) return;
-                var fromA = acquaintanceItems.indexOf(item) !== -1;
-                if (fromA) {
-                    acquaintanceItems.splice(acquaintanceItems.indexOf(item), 1);
-                    descriptionItems.push(item);
-                } else {
-                    descriptionItems.splice(descriptionItems.indexOf(item), 1);
-                    acquaintanceItems.push(item);
-                }
-                renderAcquaintance();
-            });
-        });
-    }
-    document.addEventListener('dragend', function(e) {
-        if (e.target.classList) e.target.classList.remove('dragging');
-    });
-    renderAcquaintance();
+    })();
 })();

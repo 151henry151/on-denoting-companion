@@ -3,15 +3,14 @@
 A single-page web application that accompanies Bertrand Russell’s 1905 paper “On Denoting.” It includes the full text of the paper and an interactive companion with:
 
 - **Expansion Engine** — Russell’s logical expansions of denoting phrases (a/some/every/all/no/the) with step-by-step mode
-- **Theory Comparator** — Compare Russell, Frege, and Meinong on the same propositions
-- **Primary vs Secondary Occurrence** — Scope and truth-value for the King of France and George IV / Waverley cases
-- **Three Puzzles** — George IV & identity, excluded middle, and the difference puzzle with Russell’s solutions
-- **Acquaintance & Description** — Drag-and-drop illustration of knowledge by acquaintance vs description
+- **Theory Comparator** — Compare Russell, Frege, and Meinong using free-text propositions
+- **Primary vs Secondary Occurrence** — Scope and truth-value comparisons from free-text propositions
 
 ## Tech
 
 - Vanilla HTML, CSS, and JavaScript (single-page companion plus separate `companion.js`)
 - Google Fonts (Libre Baskerville, Source Sans 3)
+- KaTeX for LaTeX math rendering of symbolic logic
 - No build step; can be served as static files
 
 ## Usage

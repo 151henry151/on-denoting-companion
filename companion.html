@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
     <style>
         :root {
             --bg: #f5f3ee;
@@ -55,6 +57,7 @@
             border-radius: 6px; font-size: 1rem; font-family: inherit;
         }
         .control-row { margin-bottom: 1rem; }
+        .control-help { margin-top: 0.35rem; font-size: 0.85rem; color: var(--muted); }
         .btn {
             display: inline-block; padding: 0.45rem 0.9rem; border-radius: 6px; border: none;
             font-weight: 600; cursor: pointer; font-size: 0.9rem; font-family: inherit;
@@ -71,6 +74,13 @@
         .output-box .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.35rem; }
         .output-box .content { min-height: 1.5em; }
         .logic-font { font-family: 'Source Sans 3', monospace; font-size: 0.95rem; }
+        .error-box {
+            margin-top: 0.75rem;
+            color: var(--false);
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-height: 1.4em;
+        }
         .step-item { margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.6); border-radius: 4px; }
         .step-item.visible { opacity: 1; transition: opacity 0.3s; }
         .step-item.hidden { opacity: 0; }
@@ -92,20 +102,6 @@
         .occurrence-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
         @media (max-width: 600px) { .occurrence-panels { grid-template-columns: 1fr; } }
         .occurrence-panel { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
-        .puzzle-card {
-            background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-            margin-bottom: 1rem; overflow: hidden;
-        }
-        .puzzle-card summary { padding: 1rem; cursor: pointer; font-weight: 600; list-style: none; }
-        .puzzle-card summary::-webkit-details-marker { display: none; }
-        .puzzle-card .body { padding: 0 1rem 1rem; }
-        .acquaintance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1rem 0; }
-        @media (max-width: 600px) { .acquaintance-grid { grid-template-columns: 1fr; } }
-        .acquaintance-col { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; min-height: 180px; }
-        .acquaintance-col h3 { font-size: 1rem; margin: 0 0 0.75rem 0; }
-        .acquaintance-item { padding: 0.4rem 0.6rem; margin: 0.25rem 0; background: var(--bg); border-radius: 4px; cursor: grab; }
-        .acquaintance-item:active { cursor: grabbing; }
-        .acquaintance-item.dragging { opacity: 0.5; }
         .summary-box { background: var(--accent-light); border: 1px solid var(--accent); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95rem; }
         footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
         .step-annotation { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
@@ -122,8 +118,6 @@
         <button type="button" data-tab="expansion" class="active">Expansion Engine</button>
         <button type="button" data-tab="comparator">Theory Comparator</button>
         <button type="button" data-tab="occurrence">Primary vs Secondary</button>
-        <button type="button" data-tab="puzzles">Three Puzzles</button>
-        <button type="button" data-tab="acquaintance">Acquaintance and Description</button>
     </div>
     <main class="main">
         <section id="expansion" class="section active">
@@ -169,13 +163,11 @@
             <p class="section-desc">Compare Russell, Frege, and Meinong on the same proposition.</p>
             <div class="control-row">
                 <label>Proposition</label>
-                <select id="comparatorProposition">
-                    <option value="king-bald">The present King of France is bald</option>
-                    <option value="king-not-bald">The present King of France is not bald</option>
-                    <option value="waverley">The author of Waverley was a man</option>
-                    <option value="charles">The father of Charles II was executed</option>
-                </select>
+                <input type="text" id="comparatorProposition" value="The present King of France is bald" placeholder="Type a proposition, e.g. The author of Waverley was a man">
+                <div class="control-help">Valid forms: "The [description] is/was [predicate]" and "The [description] is/was not [predicate]".</div>
             </div>
+            <button type="button" class="btn btn-primary" id="comparatorAnalyzeBtn">Analyze proposition</button>
+            <div class="error-box" id="comparatorError"></div>
             <div class="theory-panels">
                 <div class="theory-panel russell">
                     <h3>Russell</h3>
@@ -202,11 +194,11 @@
             <p class="section-desc">Primary vs secondary occurrence of a denoting phrase.</p>
             <div class="control-row">
                 <label>Proposition</label>
-                <select id="occurrenceProposition">
-                    <option value="king-not-bald">The present King of France is not bald</option>
-                    <option value="george-waverley">George IV wished to know whether the author of Waverley was Scott</option>
-                </select>
+                <input type="text" id="occurrenceProposition" value="The present King of France is not bald" placeholder="Type a proposition to compare primary vs secondary scope">
+                <div class="control-help">Valid forms: "The [description] is/was not [predicate]" and "[Name] wished to know whether the [description] is/was [predicate]".</div>
             </div>
+            <button type="button" class="btn btn-primary" id="occurrenceAnalyzeBtn">Analyze proposition</button>
+            <div class="error-box" id="occurrenceError"></div>
             <div class="occurrence-panels">
                 <div class="occurrence-panel">
                     <h3>Primary occurrence</h3>
@@ -226,52 +218,6 @@
                 </div>
             </div>
             <div class="summary-box" id="occurrenceSummary"></div>
-        </section>
-        <section id="puzzles" class="section">
-            <p class="section-desc">Russell's three puzzles and his solutions.</p>
-            <details class="puzzle-card">
-                <summary>Puzzle 1: George IV and identity</summary>
-                <div class="body">
-                    <p>If Scott is the author of Waverley, substituting gives: George IV wished to know whether Scott was Scott. That is absurd.</p>
-                    <button type="button" class="btn btn-secondary" id="p1Substitute">Show substitution</button>
-                    <p id="p1Result" style="margin-top:0.75rem;"></p>
-                    <p id="p1Solution" style="margin-top:0.75rem;font-style:italic;color:var(--muted);"></p>
-                </div>
-            </details>
-            <details class="puzzle-card">
-                <summary>Puzzle 2: Excluded middle</summary>
-                <div class="body">
-                    <p>Either the King of France is bald or not bald - but we find him in neither list. Russell: the denial has a secondary reading that is true.</p>
-                    <p id="p2Joke" style="font-style:italic;"></p>
-                    <p id="p2Solution" style="margin-top:0.5rem;"></p>
-                </div>
-            </details>
-            <details class="puzzle-card">
-                <summary>Puzzle 3: The difference</summary>
-                <div class="body">
-                    <p>When A and B differ there is a difference; when they do not, there is no such entity. How can a non-entity be the subject?</p>
-                    <label>A</label><input type="text" id="p3A" value="Earth">
-                    <label>B</label><input type="text" id="p3B" value="Mars">
-                    <p><strong>The difference between A and B</strong>: <span id="p3Denotation"></span></p>
-                    <p id="p3Solution" style="margin-top:0.5rem;"></p>
-                </div>
-            </details>
-        </section>
-        <section id="acquaintance" class="section">
-            <p class="section-desc">Acquaintance vs knowledge by description.</p>
-            <div class="acquaintance-grid">
-                <div class="acquaintance-col">
-                    <h3>Known by acquaintance</h3>
-                    <div id="acquaintanceList"></div>
-                </div>
-                <div class="acquaintance-col">
-                    <h3>Known by description only</h3>
-                    <div id="descriptionList"></div>
-                </div>
-            </div>
-            <div class="summary-box">
-                When you expand e.g. "the centre of mass of the Solar System is a point" in the Expansion Engine, the logical form contains no term that directly names that point - only the descriptive conditions. The thing itself is not a constituent of the proposition.
-            </div>
         </section>
     </main>
     <footer>
