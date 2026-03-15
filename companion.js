@@ -48,6 +48,18 @@
         });
     }
 
+    var SYMBOL_GLOSSARY = '\u2203 = there exists; \u2200 = for all; \u2227 = and; \u00AC = not; \u2192 = implies; = = is identical to.';
+
+    function setExplainer(elementId, formulaSymbols) {
+        var el = document.getElementById(elementId);
+        if (!el) return;
+        if (!formulaSymbols) {
+            el.textContent = '';
+            return;
+        }
+        el.innerHTML = '<strong>Symbols:</strong> ' + SYMBOL_GLOSSARY + ' ' + formulaSymbols;
+    }
+
     function setBadge(id, truth) {
         var cls;
         if (truth === 'true') cls = 'true';
@@ -166,6 +178,7 @@
 
         document.getElementById('naturalOutput').textContent = natural;
         renderMath('symbolicOutput', symbolicLatex);
+        setExplainer('expansionSymbolExplainer', 'In this formula: F(x) = x satisfies the description; C(x) = the predicate holds of x.');
 
         var stepContainer = document.getElementById('stepByStepContainer');
         stepContainer.innerHTML = '';
@@ -350,6 +363,9 @@
 
         if (form !== 'the') {
             errorEl.textContent = 'Primary vs secondary applies to definite descriptions. Select \u201cthe [noun]\u201d above.';
+            setExplainer('singleFormExplainer', '');
+            setExplainer('primaryFormExplainer', '');
+            setExplainer('secondaryFormExplainer', '');
             return;
         }
 
@@ -368,6 +384,9 @@
                 singleEl.textContent = singleLatex;
             }
             document.getElementById('singleParaphrase').textContent = 'There is exactly one ' + parsedNegation.description + ', and it is ' + parsedNegation.predicate + '.';
+            setExplainer('singleFormExplainer', 'Here D(x) = x satisfies the description; P(x) = the predicate holds of x.');
+            setExplainer('primaryFormExplainer', '');
+            setExplainer('secondaryFormExplainer', '');
             document.getElementById('occurrenceSingleReading').style.display = 'block';
             document.getElementById('occurrenceDualPanels').style.display = 'none';
             return;
@@ -381,6 +400,10 @@
 
             renderMath('primaryForm', primaryLatex);
             renderMath('secondaryForm', secondaryLatex);
+            var occurExplainer = 'Here D(x) = x satisfies the description; P(x) = the predicate holds of x.';
+            setExplainer('primaryFormExplainer', occurExplainer);
+            setExplainer('secondaryFormExplainer', occurExplainer);
+            setExplainer('singleFormExplainer', '');
             document.getElementById('primaryParaphrase').textContent = 'There is exactly one ' + parsedNegation.description + ', and it is not ' + parsedNegation.predicate + '.';
             document.getElementById('secondaryParaphrase').textContent = 'It is not the case that there is exactly one ' + parsedNegation.description + ' that is ' + parsedNegation.predicate + '.';
             document.getElementById('occurrenceSummary').textContent = 'For negated definite descriptions, primary and secondary scope can diverge when the description fails to denote.';
@@ -398,6 +421,10 @@
 
             renderMath('primaryForm', primaryLatexWished);
             renderMath('secondaryForm', secondaryLatexWished);
+            var wishedExplainer = 'Here D(x) = x satisfies the description; P = the predicate; W = wished to know (opaque context).';
+            setExplainer('primaryFormExplainer', wishedExplainer);
+            setExplainer('secondaryFormExplainer', wishedExplainer);
+            setExplainer('singleFormExplainer', '');
 
             document.getElementById('primaryParaphrase').textContent = parsedWished.asker + ' wished to know, concerning the uniquely described individual, whether that individual was ' + parsedWished.predicate + '.';
             document.getElementById('secondaryParaphrase').textContent = parsedWished.asker + ' wished to know whether the entire definite-description proposition was true.';

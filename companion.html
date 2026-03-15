@@ -83,6 +83,13 @@
             font-weight: 600;
             min-height: 1.4em;
         }
+        .symbol-explainer {
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .symbol-explainer strong { color: var(--text); }
         .step-item { margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.6); border-radius: 4px; }
         .step-item.visible { opacity: 1; transition: opacity 0.3s; }
         .step-item.hidden { opacity: 0; }
@@ -159,6 +166,7 @@
             <div class="output-box">
                 <div class="label">Symbolic logic</div>
                 <div class="content logic-font" id="symbolicOutput"></div>
+                <div class="symbol-explainer" id="expansionSymbolExplainer" aria-live="polite"></div>
             </div>
         </section>
         <section id="comparator" class="section">
@@ -254,6 +262,7 @@
                 <div class="output-box highlight">
                     <div class="label">Single reading (no scope ambiguity)</div>
                     <div id="singleForm" class="content"></div>
+                    <div class="symbol-explainer" id="singleFormExplainer" aria-live="polite"></div>
                     <div id="singleParaphrase" class="content" style="margin-top:0.5rem;"></div>
                     <p class="control-help" style="margin-top:0.5rem;">Primary/secondary distinction applies when the description is under negation (&ldquo;The F is not G&rdquo;) or in an opaque context (&ldquo;X wished to know whether...&rdquo;).</p>
                 </div>
@@ -263,6 +272,7 @@
                     <h3>Primary occurrence</h3>
                     <div class="label">Logical form</div>
                     <div id="primaryForm" class="content"></div>
+                    <div class="symbol-explainer" id="primaryFormExplainer" aria-live="polite"></div>
                     <div class="label" style="margin-top:0.5rem;">Paraphrase</div>
                     <div id="primaryParaphrase" class="content"></div>
                 </div>
@@ -270,6 +280,7 @@
                     <h3>Secondary occurrence</h3>
                     <div class="label">Logical form</div>
                     <div id="secondaryForm" class="content"></div>
+                    <div class="symbol-explainer" id="secondaryFormExplainer" aria-live="polite"></div>
                     <div class="label" style="margin-top:0.5rem;">Paraphrase</div>
                     <div id="secondaryParaphrase" class="content"></div>
                 </div>
